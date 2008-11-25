@@ -16,6 +16,19 @@
             </div>
             <div class="body">
                 {{ entry.body }}
+                {% if entry.mp3url %}
+                <div class="audio">
+                <object type="application/x-shockwave-flash" data="/static/misc/audioplayer.swf" id="{{ entry.key }}" height="24" width="479">
+                    <param name="movie" value="/misc/audioplayer.swf">
+                    <param name="FlashVars" value="playerID={{ entry.key }}&amp;soundFile={{ entry.mp3url|urlencode }}&amp;
+                    titles={{ entry.title|urlencode }}&amp;artists=&amp;autostart=no&amp;loader=0x1030cc&amp;border=0xecf2fa&amp;
+                    bg=0xecf2fa&amp;tracker=0xd5e3f4&amp;leftbg=0xd5e3f4&amp;rightbg=0xd5e3f4&amp;rightbghover=0x6797d3&amp;
+                    lefticon=0x1030cc&amp;righticon=0x1030cc&amp;voltrack=0x6797d3&amp;volslider=0x1030cc">
+                    <param name="quality" value="high">
+                    <param name="menu" value="false"><param name="wmode" value="transparent">
+                </object>
+                </div>
+                {% endif %}
             </div>
             <div class="share">
                 <a href="#" onclick="var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('src','http://friendfeed.com/share/bookmarklet/javascript?url={% filter urlencode %}http://{{ request.host }}/e/{{ entry.slug }}{% endfilter %}&amp;title={{ entry.title|urlencode }}');document.body.appendChild(e); return false;"><img src="http://friendfeed.com/static/images/icons/internal.png" title="Share on FriendFeed" alt="Share on FriendFeed"/></a>

@@ -50,17 +50,41 @@ class Entry(db.Model):
     published = db.DateTimeProperty(auto_now_add=True)
     updated = db.DateTimeProperty(auto_now=True)
     tags = db.ListProperty(db.Category)
+    #podcast? maybe?
+    mp3url = db.LinkProperty()
+    mp3length = db.IntegerProperty()
 
 
 class EntryForm(djangoforms.ModelForm):
     class Meta:
         model = Entry
-        exclude = ["author", "slug", "published", "updated", "tags"]
+        exclude = ["author", "slug", "published", "updated", "tags", "mp3url", "mp3length"]
 
 
 class BaseRequestHandler(webapp.RequestHandler):
     def head(self):
         pass
+
+    def _content_length(self, url):
+        """Feeds enclosures need media length, 
+        so we retrieve it here using json-head 
+        appengine service by Simon.
+        http://json-head.appspot.com/?url="""
+        
+        if url:
+            response = urlfetch.fetch("http://json-head.appspot.com/?url=" + url)
+            if response.status_code == 200:
+                data = simplejson.loads(response.content)
+                length = data["headers"]["Content-Length"]
+            try:
+                length = int(length)
+            except ValueError:
+                length = 0
+
+        return length
+
+
+
 
     def raise_error(self, code):
         self.error(code)
@@ -144,6 +168,10 @@ class BaseRequestHandler(webapp.RequestHandler):
             language="en",
         )
         for entry in entries[:10]:
+            if entry.mp3url:
+                enclosure = feedgenerator.Enclosure(unicode(entry.mp3url), unicode(entry.mp3length), u'audio/mpeg')
+            else:
+                enclosure = None
             f.add_item(
                 title=entry.title,
                 link=self.entry_link(entry),
@@ -151,6 +179,7 @@ class BaseRequestHandler(webapp.RequestHandler):
                 author_name=entry.author.nickname(),
                 pubdate=entry.published,
                 categories=entry.tags,
+                enclosure=enclosure,
             )
         data = f.writeString("utf-8")
         self.response.headers["Content-Type"] = "application/atom+xml"
@@ -321,6 +350,11 @@ class NewEntryHandler(BaseRequestHandler):
                     title=self.request.get("title"),
                     slug=slug,
                 )
+
+            if self.request.get("mp3url"):
+                entry.mp3url = self.request.get("mp3url")
+                entry.mp3length = self._content_length(entry.mp3url)
+
             entry.tags = self.get_tags_argument("tags")
             entry.put()
             self.kill_entries_cache(slug=entry.slug if key else None,
