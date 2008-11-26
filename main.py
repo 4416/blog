@@ -26,6 +26,7 @@ MAPS_API_KEY = getattr(settings, "MAPS_API_KEY", None)
 SHOW_CURRENT_CITY = getattr(settings, "SHOW_CURRENT_CITY", False)
 TITLE = getattr(settings, "TITLE", "Blog")
 OLD_WORDPRESS_BLOG = getattr(settings, "OLD_WORDPRESS_BLOG", None)
+FEEDBURNER_FEED = getattr(settings, "FEEDBURNER_FEED", None)
 
 webapp.template.register_template_library("filters")
 
