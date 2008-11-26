@@ -9,23 +9,36 @@
 {% block body %}
     {% for entry in entries %}
         <div class="entry summary">
-            <h1>
-                <a href="/e/{{ entry.slug }}">{{ entry.title }}</a>
-                <span class="date" title="{{ entry.published }}">
-                    - {{ entry.published|bettertimesince }}
+            <h2>
+                <a href="/{{ entry.slug }}">{{ entry.title }}</a>
+                {% if admin %}
+                    <a class="edit" href="/edit/{{ entry.key }}">edit</a>
+                    <a class="delete" href="#">delete</a>
+                {% endif %}
+            </h2>
+            <div class="date" title="{{ entry.published }}">
+                {{ entry.published|bettertimesince }}  
+                {% if entry.tags %}
+                | Filled under:
+                <span class="tags">
+                    {% for tag in entry.tags %}
+                        <a href="/t/{{ tag }}">{{ tag }}</a>
+                    {% endfor %}
                 </span>
-            </h1>
+                {% endif %}
+                | 
+                <a class="comments" href="/{{ entry.slug }}#disqus_thread">View comments</a>&nbsp;
+            </div>
             <div class="body">
                 {{ entry.body|striptags|truncatewords:50 }}
             </div>
             {% if entry.tags %}
                 <div class="tags">
                     {% for tag in entry.tags %}
-                        <a href="/t/{{ tag }}">{{ tag }}</a>
+                        <a href="/tag/{{ tag }}">{{ tag }}</a>
                     {% endfor %}
                 </div>
             {% endif %}
-            <a class="comments" href="/e/{{ entry.slug }}#disqus_thread">View comments</a>
         </div>
     {% endfor %}
 {% endblock %}

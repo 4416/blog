@@ -304,9 +304,20 @@ a.delete {
 .date{
     border-top:1px solid #eee;
     padding:4px;
-    margin-bottom:2em;
+    margin-bottom:1.5em;
 }
 
 .audio{
-    margin:1em;
+    margin:.5em;
+}
+
+.floatright{
+    float:right;
+    padding:6px;
+    border:1px solid #eee;
+    margin:20px;
+}
+
+.clearboth{
+    clear:both;
 }

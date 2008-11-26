@@ -62,8 +62,10 @@
         </h1>
         {% endif %}
         <div id="blog-description">
-      <p><img src="/static/images/me.png" style="border: 0; vertical-align: top; float: left; margin-right: 10px;" />Hello and welcome on my Jazz' selection blog (and podcast) where I'm sharing some of the nice music I'm listening to.</p>
-    </div>
+            <p><img src="/static/images/me.png" style="border: 0; vertical-align: top; float: left; margin-right: 10px; margin-bottom:10px;" />
+            Hello and welcome on my Jazz' selection blog (and podcast) where I'm sharing some of the nice music I'm listening to.
+            </p>
+        </div>
 
 
         {% block body %}
@@ -72,14 +74,15 @@
     
     <div id="footer">
         <p>
+        Brought to you by {{ NAME }} 
         {% if EMAIL and NAME %}
-            &copy;2008 <a href="mailto:{{ EMAIL }}">{{ NAME }}</a> -
+            <a href="mailto:{{ EMAIL }}">{{ NAME }}</a> -
         {% endif %}
         {% for link in LINKS %}
             <a href="{{ link.url }}">{{ link.value }}</a> -
         {% endfor %}
         <a href="http://creativecommons.org/licenses/by/2.5/">Creative Commons License</a> -
-        <a href="http://github.com/bgolub/blog/tree/master">Source</a> -
+        <a href="http://github.com/directeur/blog/tree/jazz">Source</a> -
         <a href="http://www.famfamfam.com/lab/icons/silk/">Icons</a>
         {% if admin %}
             - <a class="new" href="/new">New</a>

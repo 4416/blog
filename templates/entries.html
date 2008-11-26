@@ -5,7 +5,7 @@
     {% for entry in entries %}
         <div id="{{ entry.key }}" class="{% block entry_class %}entry{% endblock %}">
             <h2>
-                <a href="/e/{{ entry.slug }}">{{ entry.title }}</a>
+                <a href="/{{ entry.slug }}">{{ entry.title }}</a>
                 {% if admin %}
                     <a class="edit" href="/edit/{{ entry.key }}">edit</a>
                     <a class="delete" href="#">delete</a>
@@ -17,17 +17,17 @@
                 | Filled under:
                 <span class="tags">
                     {% for tag in entry.tags %}
-                        <a href="/t/{{ tag }}">{{ tag }}</a>
+                        <a href="/tag/{{ tag }}">{{ tag }}</a>
                     {% endfor %}
                 </span>
                 {% endif %}
                 | 
-                <a class="comments" href="/e/{{ entry.slug }}#disqus_thread">View comments</a>&nbsp;
+                <a class="comments" href="/{{ entry.slug }}#disqus_thread">View comments</a>&nbsp;
                 <span class="share">
                 {% spaceless %}
                     <a href="#" onclick="var e=document.createElement('script');e.setAttribute('type','text/javascript');
                     e.setAttribute('src','http://friendfeed.com/share/bookmarklet/javascript?url={% filter urlencode %}
-                    http://{{ request.host }}/e/{{ entry.slug }}{% endfilter %}&amp;title={{ entry.title|urlencode }}');
+                    http://{{ request.host }}/{{ entry.slug }}{% endfilter %}&amp;title={{ entry.title|urlencode }}');
                     document.body.appendChild(e); return false;"><img src="http://friendfeed.com/static/images/icons/internal.png" 
                     title="Share on FriendFeed" alt="Share on FriendFeed"/></a>
                 {% endspaceless %}
@@ -36,7 +36,8 @@
             <div class="body">
                 {{ entry.body }}
                 {% if entry.mp3url %}
-                <div class="audio">
+                <div class="audio clearboth">
+                Listen Now: 
                 <object type="application/x-shockwave-flash" data="/static/misc/audioplayer.swf" id="{{ entry.key }}" height="24" width="479">
                     <param name="movie" value="/misc/audioplayer.swf">
                     <param name="FlashVars" value="playerID={{ entry.key }}&amp;soundFile={{ entry.mp3url|urlencode }}&amp;
