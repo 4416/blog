@@ -325,11 +325,11 @@ class NewEntryHandler(BaseRequestHandler):
             try:
                 entry = db.get(key)
                 extra_context["tags"] = ", ".join(entry.tags)
+                extra_context["mp3url"] = entry.mp3url
                 form = EntryForm(instance=entry)
             except db.BadKeyError:
                 return self.redirect("/new")
         extra_context["form"] = form
-        extra_context["mp3url"] = entry.mp3url if entry.mp3url else ''
         self.render("new.html", extra_context)
 
     @admin
