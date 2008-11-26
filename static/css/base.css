@@ -233,7 +233,7 @@ h1.header {
 	border: 0;
 	border-top: dotted #134a34 1px;
 	border-bottom: dotted #134a34 1px;
-	margin: 2em 0 2em 0;
+	margin: 2em 0 3.5em 0;
 	font-size: 12px;
 	line-height: 1.5em;
 	padding: 1em;
@@ -304,9 +304,20 @@ a.delete {
 .date{
     border-top:1px solid #eee;
     padding:4px;
-    margin-bottom:2em;
+    margin-bottom:1.5em;
 }
 
 .audio{
-    margin:1em;
+    margin:.5em;
+}
+
+.floatright{
+    float:right;
+    padding:6px;
+    border:1px solid #eee;
+    margin:20px;
+}
+
+.clearboth{
+    clear:both;
 }

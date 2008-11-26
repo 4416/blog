@@ -403,11 +403,10 @@ application = webapp.WSGIApplication([
     ("/archive/?", ArchivePageHandler),
     ("/delete/?", DeleteEntryHandler),
     ("/edit/([\w-]+)/?", NewEntryHandler),
-    ("/e/([\w-]+)/?", EntryPageHandler),
     ("/new/?", NewEntryHandler),
-    ("/t/([\w-]+)/?", TagPageHandler),
-    ("/(\d+)/(\d+)/(\d+)/([\w-]+)/?", OldBlogRedirectHandler),
+    ("/tag/([\w-]+)/?", TagPageHandler),
     ("/feed/?", FeedRedirectHandler),
+    ("/([\w-]+)/?", EntryPageHandler),
     ("/.*", NotFoundHandler),
 ], debug=True)
 
