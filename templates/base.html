@@ -12,12 +12,8 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div id="header">
-        {% if TITLE %}
-            <div id="logo">
-                <a href="/">{{ TITLE }}</a>
-            </div>
-        {% endif %}
+    <div id="wrapper">
+    <div id="sidebar">
         <div id="search">
             <form action="http://www.google.com/search" method="get">
                 <div>
@@ -28,8 +24,7 @@
                 </div>
             </form>
         </div>
-    </div>
-    <div id="sidebar">
+
         {% if GOOGLE_TALK_BADGE %}
             <div class="box">   
                 <iframe src="{{ GOOGLE_TALK_BADGE }}" frameborder="0" height="60" width="200"></iframe>
@@ -59,11 +54,24 @@
             </div>
         {% endif %}
     </div>
-    <div id="body">
+
+    <div id="content">
+        {% if TITLE %}
+        <h1 id="logo">
+            <a href="/" title="Jazz"><img alt="Jazz, the great selection by your friend Directeur" src="/static/images/logo.png" /></a>
+        </h1>
+        {% endif %}
+        <div id="blog-description">
+      <p><img src="/static/images/me.png" style="border: 0; vertical-align: top; float: left; margin-right: 10px;" />Hello and welcome on my Jazz' selection blog (and podcast) where I'm sharing some of the nice music I'm listening to.</p>
+    </div>
+
+
         {% block body %}
         {% endblock %}
     </div>
+    
     <div id="footer">
+        <p>
         {% if EMAIL and NAME %}
             &copy;2008 <a href="mailto:{{ EMAIL }}">{{ NAME }}</a> -
         {% endif %}
@@ -76,6 +84,7 @@
         {% if admin %}
             - <a class="new" href="/new">New</a>
         {% endif %}
+        </p>
     </div>
     {% if DISQUS %}
         <script type="text/javascript" src="http://disqus.com/forums/{{ DISQUS }}/embed.js"></script>
@@ -105,5 +114,6 @@
             pageTracker._trackPageview();
         </script>
     {% endif %}
+    </div><!--wrapper-->
 </body>
 </html>
