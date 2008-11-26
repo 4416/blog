@@ -329,6 +329,7 @@ class NewEntryHandler(BaseRequestHandler):
             except db.BadKeyError:
                 return self.redirect("/new")
         extra_context["form"] = form
+        extra_context["mp3url"] = entry.mp3url
         self.render("new.html", extra_context)
 
     @admin
