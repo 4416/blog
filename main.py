@@ -9,7 +9,8 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
 
 from django import newforms as forms
 from django.template.defaultfilters import slugify
-from django.utils import feedgenerator
+#our improved version of the django's feedgeneratorr
+import feedgenerator 
 from django.utils import simplejson
 
 from google.appengine.api import memcache
@@ -56,12 +57,15 @@ class Entry(db.Model):
     #podcast? maybe?
     mp3url = db.LinkProperty()
     mp3length = db.IntegerProperty()
+    #Image enclosure? maybe?
+    picurl = db.LinkProperty()
+    piclength = db.IntegerProperty()
 
 
 class EntryForm(djangoforms.ModelForm):
     class Meta:
         model = Entry
-        exclude = ["author", "slug", "published", "updated", "tags", "mp3url", "mp3length"]
+        exclude = ["author", "slug", "published", "updated", "tags", "mp3url", "mp3length", "picurl", "piclength"]
 
 
 class BaseRequestHandler(webapp.RequestHandler):
@@ -167,17 +171,20 @@ class BaseRequestHandler(webapp.RequestHandler):
         f = feedgenerator.Atom1Feed(
             title=TITLE,
             link="http://" + self.request.host + "/",
+            feed_url="http://" + self.request.host + "/?format=atom",
             description=TITLE,
             language="en",
         )
         for entry in entries[:10]:
+            enclosure = []
             if entry.mp3url:
-                enclosure = feedgenerator.Enclosure(unicode(entry.mp3url), unicode(entry.mp3length), u'audio/mpeg')
-            else:
-                enclosure = None
+                enclosure.append(feedgenerator.Enclosure(unicode(entry.mp3url), unicode(entry.mp3length), u'audio/mpeg'))
+            if entry.picurl:
+                enclosure.append(feedgenerator.Enclosure(unicode(entry.picurl), unicode(entry.piclength), u'image/jpeg'))
+
             f.add_item(
                 title=entry.title,
-                link=self.entry_link(entry),
+                link=self.entry_link(entry, permalink=True),
                 description=entry.body,
                 author_name=entry.author.nickname(),
                 pubdate=entry.published,
@@ -238,7 +245,7 @@ class BaseRequestHandler(webapp.RequestHandler):
         return response.headers["X-W3C-Validator-Status"] == "Valid"
 
     def entry_link(self, entry, query_args={}, permalink=False):
-        url = "/e/" + entry.slug
+        url = "/" + entry.slug
         if permalink:
             url = "http://" + self.request.host + url
         if query_args:
@@ -327,6 +334,7 @@ class NewEntryHandler(BaseRequestHandler):
                 entry = db.get(key)
                 extra_context["tags"] = ", ".join(entry.tags)
                 extra_context["mp3url"] = entry.mp3url
+                extra_context["picurl"] = entry.picurl
                 form = EntryForm(instance=entry)
             except db.BadKeyError:
                 return self.redirect("/new")
@@ -358,6 +366,10 @@ class NewEntryHandler(BaseRequestHandler):
             if self.request.get("mp3url"):
                 entry.mp3url = self.request.get("mp3url")
                 entry.mp3length = self._content_length(entry.mp3url)
+
+            if self.request.get("picurl"):
+                entry.picurl = self.request.get("picurl")
+                entry.piclength = 0#self._content_length(entry.picurl)
 
             entry.tags = self.get_tags_argument("tags")
             entry.put()
@@ -407,6 +419,7 @@ application = webapp.WSGIApplication([
     ("/new/?", NewEntryHandler),
     ("/tag/([\w-]+)/?", TagPageHandler),
     ("/feed/?", FeedRedirectHandler),
+    ("/e/([\w-]+)/?", EntryPageHandler),
     ("/([\w-]+)/?", EntryPageHandler),
     ("/.*", NotFoundHandler),
 ], debug=True)
