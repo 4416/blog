@@ -38,14 +38,15 @@
                 {% if entry.mp3url %}
                 <div class="audio clearboth">
                 Listen Now: 
-                <object type="application/x-shockwave-flash" data="/static/misc/audioplayer.swf" id="{{ entry.key }}" height="24" width="479">
-                    <param name="movie" value="/misc/audioplayer.swf">
-                    <param name="FlashVars" value="playerID={{ entry.key }}&amp;soundFile={{ entry.mp3url|urlencode }}&amp;
+                <object type="application/x-shockwave-flash" data="/static/misc/audioplayer.swf" id="Z{{ entry.key }}" height="24" width="479">
+                    <param name="movie" value="/misc/audioplayer.swf" />
+                    <param name="FlashVars" value="playerID=Z{{ entry.key }}&amp;soundFile={{ entry.mp3url|urlencode }}&amp;
                     titles={{ entry.title|urlencode }}&amp;artists=&amp;autostart=no&amp;loader=0x1030cc&amp;border=0xecf2fa&amp;
                     bg=0xecf2fa&amp;tracker=0xd5e3f4&amp;leftbg=0xd5e3f4&amp;rightbg=0xd5e3f4&amp;rightbghover=0x6797d3&amp;
-                    lefticon=0x1030cc&amp;righticon=0x1030cc&amp;voltrack=0x6797d3&amp;volslider=0x1030cc">
-                    <param name="quality" value="high">
-                    <param name="menu" value="false"><param name="wmode" value="transparent">
+                    lefticon=0x1030cc&amp;righticon=0x1030cc&amp;voltrack=0x6797d3&amp;volslider=0x1030cc" />
+                    <param name="quality" value="high" />
+                    <param name="menu" value="false" />
+                    <param name="wmode" value="transparent" />
                 </object>
                 </div>
                 {% endif %}
