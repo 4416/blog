@@ -1,3 +1,4 @@
+import re
 import BeautifulSoup
 import feedgenerator
 import functools
@@ -30,6 +31,9 @@ SHOW_CURRENT_CITY = getattr(settings, "SHOW_CURRENT_CITY", False)
 TITLE = getattr(settings, "TITLE", "Blog")
 OLD_WORDPRESS_BLOG = getattr(settings, "OLD_WORDPRESS_BLOG", None)
 FEEDBURNER_FEED = getattr(settings, "FEEDBURNER_FEED", None)
+RSSMEDIA_CLASS = getattr(settings, "RSSMEDIA_CLASS", 'mediarss')
+
+MEDIA_RSS_INCLUDE = re.compile(RSSMEDIA_CLASS)
 
 webapp.template.register_template_library("filters")
 
@@ -56,15 +60,18 @@ class MediaRSSFeed(feedgenerator.Atom1Feed):
 
     def add_item_elements(self, handler, item):
         super(MediaRSSFeed, self).add_item_elements(handler, item)
-        self.add_thumbnail_element(handler, item)
+        self.add_thumbnails_elements(handler, item)
         self.add_many_enclosures(handler, item)
 
-    def add_thumbnail_element(self, handler, item):
-        thumbnail = item.get("thumbnail", None)
-        if thumbnail:
-            handler.addQuickElement("media:thumbnail", "", {
-                "url": thumbnail["url"],
-            })
+    def add_thumbnails_elements(self, handler, item):
+        thumbnails = item.get("thumbnails", None)
+        if thumbnails:
+            handler.startElement(u"media:group", {})
+            for thumbnail in thumbnails:
+                handler.addQuickElement("media:thumbnail", "", {
+                    "url": thumbnail["url"],
+                })
+            handler.endElement(u"media:group")
 
     def add_many_enclosures(self, handler, item):
         enclosures = item.get("enclosures", None)
@@ -213,12 +220,11 @@ class BaseRequestHandler(webapp.RequestHandler):
                 return enclosure
         return None
 
-    def find_thumbnail(self, html):
+    def find_thumbnails(self, html):
         soup = BeautifulSoup.BeautifulSoup(html)
-        img = soup.find("img")
-        if img:
-            return {"url": img["src"]}
-        return None
+        images = soup.findAll("img", {'class':MEDIA_RSS_INCLUDE})
+        images_to_include = [dict(url=img['src']) for img in images]
+        return images_to_include
             
     def render_feed(self, entries):
         f = MediaRSSFeed(
@@ -241,7 +247,7 @@ class BaseRequestHandler(webapp.RequestHandler):
                 pubdate=entry.published,
                 categories=entry.tags,
                 enclosures=enclosures,
-                thumbnail=self.find_thumbnail(entry.body),
+                thumbnails=self.find_thumbnails(entry.body),
             )
         data = f.writeString("utf-8")
         self.response.headers["Content-Type"] = "application/atom+xml"
