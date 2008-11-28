@@ -57,6 +57,7 @@ class MediaRSSFeed(feedgenerator.Atom1Feed):
     def add_item_elements(self, handler, item):
         super(MediaRSSFeed, self).add_item_elements(handler, item)
         self.add_thumbnail_element(handler, item)
+        self.add_many_enclosures(handler, item)
 
     def add_thumbnail_element(self, handler, item):
         thumbnail = item.get("thumbnail", None)
@@ -64,6 +65,16 @@ class MediaRSSFeed(feedgenerator.Atom1Feed):
             handler.addQuickElement("media:thumbnail", "", {
                 "url": thumbnail["url"],
             })
+
+    def add_many_enclosures(self, handler, item):
+        enclosures = item.get("enclosures", None)
+        if enclosures:
+            for enclosure in enclosures:
+                handler.addQuickElement(u"link", '',
+                    {u"rel": u"enclosure",
+                     u"href": enclosure.url,
+                     u"length": enclosure.length,
+                     u"type": enclosure.mime_type})
 
 
 class Entry(db.Model):
@@ -218,9 +229,9 @@ class BaseRequestHandler(webapp.RequestHandler):
             language="en",
         )
         for entry in entries[:10]:
-            enclosure = []
+            enclosures = []
             if entry.mp3url:
-                enclosure.append(feedgenerator.Enclosure(unicode(entry.mp3url), unicode(entry.mp3length), u'audio/mpeg'))
+                enclosures.append(feedgenerator.Enclosure(unicode(entry.mp3url), unicode(entry.mp3length), u'audio/mpeg'))
 
             f.add_item(
                 title=entry.title,
@@ -229,7 +240,7 @@ class BaseRequestHandler(webapp.RequestHandler):
                 author_name=entry.author.nickname(),
                 pubdate=entry.published,
                 categories=entry.tags,
-                enclosure=enclosure,
+                enclosures=enclosures,
                 thumbnail=self.find_thumbnail(entry.body),
             )
         data = f.writeString("utf-8")
