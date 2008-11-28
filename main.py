@@ -77,15 +77,12 @@ class Entry(db.Model):
     #podcast? maybe?
     mp3url = db.LinkProperty()
     mp3length = db.IntegerProperty()
-    #Image enclosure? maybe?
-    picurl = db.LinkProperty()
-    piclength = db.IntegerProperty()
 
 
 class EntryForm(djangoforms.ModelForm):
     class Meta:
         model = Entry
-        exclude = ["author", "slug", "published", "updated", "tags", "mp3url", "mp3length", "picurl", "piclength"]
+        exclude = ["author", "slug", "published", "updated", "tags", "mp3url", "mp3length"]
 
 
 class BaseRequestHandler(webapp.RequestHandler):
@@ -224,8 +221,6 @@ class BaseRequestHandler(webapp.RequestHandler):
             enclosure = []
             if entry.mp3url:
                 enclosure.append(feedgenerator.Enclosure(unicode(entry.mp3url), unicode(entry.mp3length), u'audio/mpeg'))
-            if entry.picurl:
-                enclosure.append(feedgenerator.Enclosure(unicode(entry.picurl), unicode(entry.piclength), u'image/jpeg'))
 
             f.add_item(
                 title=entry.title,
@@ -381,7 +376,6 @@ class NewEntryHandler(BaseRequestHandler):
                 entry = db.get(key)
                 extra_context["tags"] = ", ".join(entry.tags)
                 extra_context["mp3url"] = entry.mp3url
-                extra_context["picurl"] = entry.picurl
                 form = EntryForm(instance=entry)
             except db.BadKeyError:
                 return self.redirect("/new")
@@ -413,10 +407,6 @@ class NewEntryHandler(BaseRequestHandler):
             if self.request.get("mp3url"):
                 entry.mp3url = self.request.get("mp3url")
                 entry.mp3length = self._content_length(entry.mp3url)
-
-            if self.request.get("picurl"):
-                entry.picurl = self.request.get("picurl")
-                entry.piclength = 0#self._content_length(entry.picurl)
 
             entry.tags = self.get_tags_argument("tags")
             entry.put()
