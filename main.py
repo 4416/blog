@@ -1,3 +1,5 @@
+import BeautifulSoup
+import feedgenerator
 import functools
 import os
 import uuid
@@ -9,9 +11,9 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
 
 from django import newforms as forms
 from django.template.defaultfilters import slugify
-#our improved version of the django's feedgeneratorr
 import feedgenerator 
 from django.utils import simplejson
+from django.utils.feedgenerator import Enclosure
 
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
@@ -44,6 +46,24 @@ def admin(method):
         else:
             return method(self, *args, **kwargs)
     return wrapper
+
+
+class MediaRSSFeed(feedgenerator.Atom1Feed):
+    def root_attributes(self):
+        attrs = super(MediaRSSFeed, self).root_attributes()
+        attrs["xmlns:media"] = "http://search.yahoo.com/mrss/"
+        return attrs
+
+    def add_item_elements(self, handler, item):
+        super(MediaRSSFeed, self).add_item_elements(handler, item)
+        self.add_thumbnail_element(handler, item)
+
+    def add_thumbnail_element(self, handler, item):
+        thumbnail = item.get("thumbnail", None)
+        if thumbnail:
+            handler.addQuickElement("media:thumbnail", "", {
+                "url": thumbnail["url"],
+            })
 
 
 class Entry(db.Model):
@@ -89,9 +109,6 @@ class BaseRequestHandler(webapp.RequestHandler):
                 length = 0
 
         return length
-
-
-
 
     def raise_error(self, code):
         self.error(code)
@@ -164,11 +181,39 @@ class BaseRequestHandler(webapp.RequestHandler):
     def get_integer_argument(self, name, default):
         try:
             return int(self.request.get(name, default))
-        except ValueError:
+        except (TypeError, ValueError):
             return default
 
+    def fetch_headers(self, url):
+        key = "headers/" + url
+        headers = memcache.get(key)
+        if not headers:
+            response = urlfetch.fetch(url, method=urlfetch.HEAD)
+            if response.status_code == 200:
+                headers = response.headers
+                memcache.set(key, headers)
+        return headers
+
+    def find_enclosure(self, html):
+        soup = BeautifulSoup.BeautifulSoup(html)
+        img = soup.find("img")
+        if img:
+            headers = self.fetch_headers(img["src"])
+            if headers:
+                enclosure = Enclosure(img["src"], headers["Content-Length"],
+                    headers["Content-Type"])
+                return enclosure
+        return None
+
+    def find_thumbnail(self, html):
+        soup = BeautifulSoup.BeautifulSoup(html)
+        img = soup.find("img")
+        if img:
+            return {"url": img["src"]}
+        return None
+            
     def render_feed(self, entries):
-        f = feedgenerator.Atom1Feed(
+        f = MediaRSSFeed(
             title=TITLE,
             link="http://" + self.request.host + "/",
             feed_url="http://" + self.request.host + "/?format=atom",
@@ -184,12 +229,13 @@ class BaseRequestHandler(webapp.RequestHandler):
 
             f.add_item(
                 title=entry.title,
-                link=self.entry_link(entry, permalink=True),
+                link=self.entry_link(entry, absolute=True),
                 description=entry.body,
                 author_name=entry.author.nickname(),
                 pubdate=entry.published,
                 categories=entry.tags,
                 enclosure=enclosure,
+                thumbnail=self.find_thumbnail(entry.body),
             )
         data = f.writeString("utf-8")
         self.response.headers["Content-Type"] = "application/atom+xml"
@@ -204,11 +250,12 @@ class BaseRequestHandler(webapp.RequestHandler):
             "published": entry.published.isoformat(),
             "updated": entry.updated.isoformat(),
             "tags": entry.tags,
-            "link": self.entry_link(entry, permalink=True),
+            "link": self.entry_link(entry, absolute=True),
         } for entry in entries]
         json = {"entries": json_entries}
         self.response.headers["Content-Type"] = "text/javascript"
-        self.response.out.write(simplejson.dumps(json))
+        self.response.out.write(simplejson.dumps(json, sort_keys=True, 
+            indent=self.get_integer_argument("pretty", None)))
 
     def render(self, template_file, extra_context={}):
         if "entries" in extra_context:
@@ -238,15 +285,15 @@ class BaseRequestHandler(webapp.RequestHandler):
 
     def is_valid_xhtml(self, entry):
         args = urllib.urlencode({
-            "uri": self.entry_link(entry, permalink=True),
+            "uri": self.entry_link(entry, absolute=True),
         })
         response = urlfetch.fetch("http://validator.w3.org/check?" + args,
             method=urlfetch.HEAD)
         return response.headers["X-W3C-Validator-Status"] == "Valid"
 
-    def entry_link(self, entry, query_args={}, permalink=False):
-        url = "/" + entry.slug
-        if permalink:
+    def entry_link(self, entry, query_args={}, absolute=False):
+        url = "/e/" + entry.slug
+        if absolute:
             url = "http://" + self.request.host + url
         if query_args:
             url += "?" + urllib.urlencode(query_args)
