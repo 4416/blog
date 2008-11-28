@@ -107,24 +107,6 @@ class BaseRequestHandler(webapp.RequestHandler):
     def head(self):
         pass
 
-    def _content_length(self, url):
-        """Feeds enclosures need media length, 
-        so we retrieve it here using json-head 
-        appengine service by Simon.
-        http://json-head.appspot.com/?url="""
-        
-        if url:
-            response = urlfetch.fetch("http://json-head.appspot.com/?url=" + url)
-            if response.status_code == 200:
-                data = simplejson.loads(response.content)
-                length = data["headers"]["Content-Length"]
-            try:
-                length = int(length)
-            except ValueError:
-                length = 0
-
-        return length
-
     def raise_error(self, code):
         self.error(code)
         self.render("%i.html" % code)
@@ -423,7 +405,8 @@ class NewEntryHandler(BaseRequestHandler):
 
             if self.request.get("mp3url"):
                 entry.mp3url = self.request.get("mp3url")
-                entry.mp3length = self._content_length(entry.mp3url)
+                mp3headers = self.fetch_headers(entry.mp3url)
+                entry.mp3length = int(mp3headers['Content-Length'])
 
             entry.tags = self.get_tags_argument("tags")
             entry.put()
