@@ -321,3 +321,13 @@ a.delete {
 .clearboth{
     clear:both;
 }
+label{
+    display:block;
+    font-weight:bold;
+    content:
+}
+.info {
+    padding:.5em;
+    background-color:#FFFBE9;
+    border:1px solid #ffcc00;
+}

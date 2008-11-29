@@ -98,6 +98,8 @@ class Entry(db.Model):
 
 
 class EntryForm(djangoforms.ModelForm):
+    body = forms.CharField(
+            widget=forms.Textarea(attrs={'rows':'15', 'cols':60}))
     class Meta:
         model = Entry
         exclude = ["author", "slug", "published", "updated", "tags", "mp3url", "mp3length"]
