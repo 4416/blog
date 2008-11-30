@@ -66,12 +66,12 @@ class MediaRSSFeed(feedgenerator.Atom1Feed):
     def add_thumbnails_elements(self, handler, item):
         thumbnails = item.get("thumbnails", None)
         if thumbnails:
-            handler.startElement(u"media:group", {})
             for thumbnail in thumbnails:
+                handler.startElement(u"media:group", {})
                 handler.addQuickElement("media:thumbnail", "", {
                     "url": thumbnail["url"],
                 })
-            handler.endElement(u"media:group")
+                handler.endElement(u"media:group")
 
     def add_many_enclosures(self, handler, item):
         enclosures = item.get("enclosures", None)
