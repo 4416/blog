@@ -72,6 +72,9 @@ class MediaRSSFeed(feedgenerator.Atom1Feed):
                 handler.startElement(u"media:group", {})
                 handler.addQuickElement("media:thumbnail", "", {
                     "url": thumbnail["url"],
+                    "width": thumbnail["width"],
+                    "height": thumbnail["height"],
+                    "title": thumbnail["title"],
                 })
                 handler.endElement(u"media:group")
 
@@ -209,7 +212,8 @@ class BaseRequestHandler(webapp.RequestHandler):
     def find_thumbnails(self, html):
         soup = BeautifulSoup.BeautifulSoup(html)
         images = soup.findAll("img", {'class':MEDIA_RSS_INCLUDE})
-        images_to_include = [dict(url=img['src']) for img in images]
+        images_to_include = [dict(url=img['src'], height=img.get('height', u'75'), 
+            width=img.get('width', u'75'), title=img.get('alt', '') ) for img in images]
         return images_to_include
 
     def generate_sup_id(self, url=None):
