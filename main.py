@@ -2,6 +2,8 @@ import re
 import BeautifulSoup
 import feedgenerator
 import functools
+import hashlib
+import logging
 import os
 import uuid
 import urllib
@@ -209,6 +211,14 @@ class BaseRequestHandler(webapp.RequestHandler):
         images = soup.findAll("img", {'class':MEDIA_RSS_INCLUDE})
         images_to_include = [dict(url=img['src']) for img in images]
         return images_to_include
+
+    def generate_sup_id(self, url=None):
+        return hashlib.md5(url or self.request.url).hexdigest()[:10]
+
+    def set_sup_id_header(self):
+        sup_id = self.generate_sup_id()
+        self.response.headers["X-SUP-ID"] = \
+            "http://friendfeed.com/api/public-sup.json#%s" % sup_id
             
     def render_feed(self, entries):
         f = MediaRSSFeed(
@@ -235,6 +245,7 @@ class BaseRequestHandler(webapp.RequestHandler):
             )
         data = f.writeString("utf-8")
         self.response.headers["Content-Type"] = "application/atom+xml"
+        self.set_sup_id_header()
         self.response.out.write(data)
 
     def render_json(self, entries):
@@ -271,13 +282,19 @@ class BaseRequestHandler(webapp.RequestHandler):
         self.response.out.write(template.render(path, extra_context))
 
     def ping(self, entry=None):
+        feed = "http://" + self.request.host + "/?format=atom"
         args = urllib.urlencode({
             "name": TITLE,
             "url": "http://" + self.request.host + "/",
-            "changesURL": "http://" + self.request.host + "/?format=atom",
+            "changesURL": feed,
         })
         response = urlfetch.fetch("http://blogsearch.google.com/ping?" + args)
-        return response.status_code
+        args = urllib.urlencode({
+            "url": feed,
+            "supid": self.generate_sup_id(feed),
+        })
+        response = urlfetch.fetch("http://friendfeed.com/api/public-sup-ping?" \
+            + args)
 
     def is_valid_xhtml(self, entry):
         args = urllib.urlencode({
@@ -345,6 +362,10 @@ class FeedRedirectHandler(BaseRequestHandler):
 
 
 class MainPageHandler(BaseRequestHandler):
+    def head(self):
+        if self.request.get("format", None) == "atom":
+            self.set_sup_id_header()
+
     def get(self):
         offset = self.get_integer_argument("start", 0)
         if not offset:
@@ -465,6 +486,7 @@ application = webapp.WSGIApplication([
 ], debug=True)
 
 def main():
+    logging.getLogger().setLevel(logging.DEBUG)
     run_wsgi_app(application)
 
 if __name__ == "__main__":
