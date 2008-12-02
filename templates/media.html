@@ -1,0 +1,80 @@
+{% spaceless %}
+    {% ifequal mediatype "mp3" %}
+    <div class="audio clearboth">
+    <object type="application/x-shockwave-flash" data="/static/misc/audioplayer.swf" id="{{url|hashit}}" height="24" width="479">
+        <param name="movie" value="/misc/audioplayer.swf" />
+        <param name="FlashVars" value="playerID=Z{{url|hashit}}&amp;soundFile={{url}}&amp;titles={{e.title|urlencode}}&amp;artists=&amp;autostart=no&amp;loader=0x1030cc&amp;border=0xecf2fa&amp;bg=0xecf2fa&amp;tracker=0xd5e3f4&amp;leftbg=0xd5e3f4&amp;rightbg=0xd5e3f4&amp;rightbghover=0x6797d3&amp;lefticon=0x1030cc&amp;righticon=0x1030cc&amp;voltrack=0x6797d3&amp;volslider=0x1030cc" />
+        <param name="quality" value="high" />
+        <param name="menu" value="false" />
+        <param name="wmode" value="transparent" />
+    </object>
+    </div>
+    {% endifequal %}
+        
+    {% ifequal mediatype 'youtube' %}
+    <br class="clearit" />
+    <div class="video">
+    <object width="380" height="320">
+        <param name="movie" value="{{url|mediaparam|urlencode}}&hl=en&fs=1">
+        </param><param name="allowFullScreen" value="true"></param>
+        <embed src="{{url|mediaparam|urlencode}}&hl=en&fs=1" type="application/x-shockwave-flash" 
+        allowfullscreen="true" width="380" height="320"></embed>
+    </object>
+    </div>
+    <br class="clearit" />
+    {% endifequal %}
+
+    {% ifequal mediatype 'seesmic' %}
+    <br class="clearit" />
+    <div id="{{url|hashit}}" class="video">
+    <object width="380" height="320">
+    <param name="movie" value="http://seesmic.com/embeds/wrapper.swf"/>
+    <param name="allowScriptAccess" value="always"/>
+    <param name="allowFullScreen" value="true" />
+    <param name="flashVars" value="video={{url|mediaparam}}&amp;version=threadedplayer"/>
+    <embed src="http://seesmic.com/embeds/wrapper.swf" type="application/x-shockwave-flash" 
+    flashvars="video={{url|mediaparam}}&amp;version=threadedplayer" allowFullScreen="true" wmode="transparent" 
+    allowScriptAccess="always" width="380" height=" 320"></embed>
+    </object>
+    </div>
+    {% endifequal %}
+
+    {% ifequal mediatype 'vimeo' %}
+    <br class="clearit" />
+    <div class="video">
+    <object width="380" height="320">	
+        <param name="allowfullscreen" value="true" />	
+        <param name="allowscriptaccess" value="always" />	
+        <param name="movie" value="http://www.vimeo.com/moogaloop.swf?clip_id={{url|mediaparam}}&amp;
+        server=www.vimeo.com&amp;show_title=1&amp;show_byline=0&amp;show_portrait=0&amp;color=&amp;fullscreen=1&amp;autoplay=0" />	
+        <embed src="http://www.vimeo.com/moogaloop.swf?clip_id={{url|mediaparam}}&amp;
+        server=www.vimeo.com&amp;show_title=1&amp;show_byline=0&amp;show_portrait=0&amp;
+        color=&amp;fullscreen=1&amp;autoplay=0" type="application/x-shockwave-flash" allowfullscreen="true" 
+        allowscriptaccess="always" width="380" height="320"></embed>
+    </object>
+    </div>
+    <br class="clearit" />
+    {% endifequal %}
+
+    {% ifequal mediatype 'video' %}
+    <br class="clearit" />
+    <div class="video">
+        <object width="380" height="320">	
+        <param name="movie" value="/static/misc/playerflv.swf" />
+        <param name="allowFullScreen" value="true" />
+        <param name="FlashVars" value="flv={{url}}
+        &amp;autoplay=1
+        &amp;showvolume=1
+        &amp;showtime=1
+        &amp;showloading=1
+        &amp;title={{e.title}}" />
+        <embed src="/static/misc/playerflv.swf?flv={{url|urlencode}}&amp;autoplay=1
+        &amp;showvolume=1 &amp;showtime=1 &amp;showloading=1
+        &amp;title={{e.title|urlencode}}" type="application/x-shockwave-flash" allowfullscreen="true" 
+        allowscriptaccess="always" width="380" height="320"></embed>
+    </object>
+    </div>
+    <br class="clearit" />
+    {% endifequal %}
+
+{% endspaceless %}

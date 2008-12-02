@@ -1,9 +1,11 @@
+import hashlib
+import BeautifulSoup
 import datetime
 from django.template.defaultfilters import timesince
 from django.conf import settings
-from google.appengine.ext import webapp
+from google.appengine.ext.webapp import template
 
-register = webapp.template.create_template_register()
+register = template.create_template_register()
 
 UTC_OFFSET = getattr(settings, "UTC_OFFSET", 0)
 
@@ -22,3 +24,40 @@ def bettertimesince(dt):
         return local_dt.strftime("%B %d, %Y")
 
 register.filter(bettertimesince)
+
+@register.filter
+def body_parse(entry):
+    """Parse a body and replace its 
+    <media> tags with equivalent HTML markup"""
+    soup = BeautifulSoup.BeautifulSoup(entry.body)
+    mediatags = soup.findAll('media')
+    for tag in mediatags:
+        tag.replaceWith('hah')
+    return soup
+
+@register.filter
+def hashit(text):
+    """generate an id"""
+    return hashlib.md5(text).hexdigest()[:10]
+
+def noprotocol(url):
+    return url.replace('http://www.', '').replace('http://', '')
+
+
+@register.filter
+def mediaparam(url):
+    "returns a param for players"
+
+    if noprotocol(url).startswith('youtube.com'):
+        param = url.replace('watch?v=', '/v/')
+    if noprotocol(url).startswith('seesmic.com'):
+        urlparts = url.split('/')
+        param = urlparts[-1]
+    if noprotocol(url).startswith('vimeo.com'):
+        urlparts = url.split('/')
+        param = urlparts[-1]
+
+
+    return param
+
+

@@ -9,15 +9,16 @@
                 (Comma separated)
             </p>
             <p class="info">
-            You can, if you want, include am mp3 file in your post and feeds. 
-            Just fill in labele field below an mp3 url
+            You can, if you want, include mp3s and videos in your post and feeds. Just use this special syntax:
+            <ul>
+                <li>[mp3:url_of_an_mp3_file]: to insert an mp3 url (and player)</li>
+                <li>[youtube:url_of_a_youtube_video]: to insert a youtube video (and player)</li>
+                <li>[seesmic:url_of_a_seesmic_video]: to insert a seesmic video (and player)</li>
+                <li>[vimeo:url_of_a_vimeo_video]: to insert a vimeo video (and player)</li>
+                <li>[video:url_of_a_flv_or_mov_video]: to insert a personal video (flv or .mov file) (and player)</li>
+            </ul>
             </p>
 
-            <p>
-            <label>MP3 Url?:</label>
-                <input type="text" name="mp3url" value="{{ mp3url }}"/>
-                (Optional)
-            </p>
             <p style="margin-top: 1em;">
                     <input type="submit" value="{% block submit_value %}Post{% endblock %}"/>
                     <a style="margin-left: .5em;" href="{% block cancel_link %}/{% endblock %}">Cancel</a>

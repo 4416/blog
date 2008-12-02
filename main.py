@@ -39,6 +39,9 @@ MEDIA_RSS_INCLUDE = re.compile(RSSMEDIA_CLASS)
 
 webapp.template.register_template_library("filters")
 
+media_regex = re.compile('\[([a-zA-Z0-9]+):([^\]]+)\]')
+enclosure_regex = re.compile('\[(mp3|video):([^\]]+)\]')
+
 def admin(method):
     @functools.wraps(method)
     def wrapper(self, *args, **kwargs):
@@ -85,6 +88,7 @@ class MediaRSSFeed(feedgenerator.Atom1Feed):
                 handler.addQuickElement(u"link", '',
                     {u"rel": u"enclosure",
                      u"href": enclosure.url,
+                     u"url": enclosure.url,
                      u"length": enclosure.length,
                      u"type": enclosure.mime_type})
 
@@ -97,9 +101,27 @@ class Entry(db.Model):
     published = db.DateTimeProperty(auto_now_add=True)
     updated = db.DateTimeProperty(auto_now=True)
     tags = db.ListProperty(db.Category)
-    #podcast? maybe?
-    mp3url = db.LinkProperty()
-    mp3length = db.IntegerProperty()
+
+
+    def _mediahtml(self, match):
+        """generate a html snippet for a media
+        given its type and url"""
+        placeholders = match.groups()
+        ctx = {
+                'e':self,
+                'mediatype':placeholders[0].strip(),
+                'url':placeholders[1]
+                }
+        template_file = "templates/media.html"
+        path = os.path.join(os.path.dirname(__file__), template_file)
+        return template.render(path, ctx)
+
+    def _body_parse(self):
+        """parse special media tags"""
+        return media_regex.sub(self._mediahtml, self.body)
+
+
+    parsed_body = property(_body_parse)
 
 
 class EntryForm(djangoforms.ModelForm):
@@ -107,7 +129,7 @@ class EntryForm(djangoforms.ModelForm):
             widget=forms.Textarea(attrs={'rows':'15', 'cols':60}))
     class Meta:
         model = Entry
-        exclude = ["author", "slug", "published", "updated", "tags", "mp3url", "mp3length"]
+        exclude = ["author", "slug", "published", "updated", "tags" ]
 
 
 class BaseRequestHandler(webapp.RequestHandler):
@@ -198,16 +220,21 @@ class BaseRequestHandler(webapp.RequestHandler):
                 memcache.set(key, headers)
         return headers
 
-    def find_enclosure(self, html):
-        soup = BeautifulSoup.BeautifulSoup(html)
-        img = soup.find("img")
-        if img:
-            headers = self.fetch_headers(img["src"])
-            if headers:
-                enclosure = Enclosure(img["src"], headers["Content-Length"],
-                    headers["Content-Type"])
-                return enclosure
-        return None
+    def find_enclosures(self, html):
+        media = enclosure_regex.findall(html)
+        logging.info(media)
+        enclosures = []
+        
+        for mtype, medium in media:
+            try:
+                headers = self.fetch_headers(medium)
+                enclosure = Enclosure(medium, headers['Content-Length'], headers['Content-Type'])
+            except:
+                enclosure = Enclosure(medium, u"5000", "audio/mpeg")
+            
+            enclosures.append(enclosure)
+
+        return enclosures
 
     def find_thumbnails(self, html):
         soup = BeautifulSoup.BeautifulSoup(html)
@@ -233,14 +260,12 @@ class BaseRequestHandler(webapp.RequestHandler):
             language="en",
         )
         for entry in entries[:10]:
-            enclosures = []
-            if entry.mp3url:
-                enclosures.append(feedgenerator.Enclosure(unicode(entry.mp3url), unicode(entry.mp3length), u'audio/mpeg'))
+            enclosures = self.find_enclosures(entry.body)
 
             f.add_item(
                 title=entry.title,
                 link=self.entry_link(entry, absolute=True),
-                description=entry.body,
+                description=entry.parsed_body,
                 author_name=entry.author.nickname(),
                 pubdate=entry.published,
                 categories=entry.tags,
@@ -402,7 +427,6 @@ class NewEntryHandler(BaseRequestHandler):
                 entry = db.get(key)
                 extra_context["entry"] = entry
                 extra_context["tags"] = ", ".join(entry.tags)
-                extra_context["mp3url"] = entry.mp3url
                 form = EntryForm(instance=entry)
             except db.BadKeyError:
                 return self.redirect("/new")
@@ -432,11 +456,6 @@ class NewEntryHandler(BaseRequestHandler):
                     title=self.request.get("title"),
                     slug=slug,
                 )
-
-            if self.request.get("mp3url"):
-                entry.mp3url = self.request.get("mp3url")
-                mp3headers = self.fetch_headers(entry.mp3url)
-                entry.mp3length = int(mp3headers['Content-Length'])
 
             entry.tags = self.get_tags_argument("tags")
             entry.put()
