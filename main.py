@@ -73,11 +73,11 @@ class MediaRSSFeed(feedgenerator.Atom1Feed):
         if thumbnails:
             for thumbnail in thumbnails:
                 handler.startElement(u"media:group", {})
+                handler.addQuickElement("media:title", thumbnail["title"])
                 handler.addQuickElement("media:thumbnail", "", {
                     "url": thumbnail["url"],
                     "width": thumbnail["width"],
                     "height": thumbnail["height"],
-                    "title": thumbnail["title"],
                 })
                 handler.endElement(u"media:group")
 
