@@ -49,7 +49,7 @@ def mediaparam(url):
     "returns a param for players"
 
     if noprotocol(url).startswith('youtube.com'):
-        param = url.replace('watch?v=', '/v/')
+        param = url.replace('watch?v=', 'v/')
     if noprotocol(url).startswith('seesmic.com'):
         urlparts = url.split('/')
         param = urlparts[-1]
