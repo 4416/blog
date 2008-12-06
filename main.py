@@ -238,7 +238,7 @@ class BaseRequestHandler(webapp.RequestHandler):
 
     def find_thumbnails(self, html):
         soup = BeautifulSoup.BeautifulSoup(html)
-        images = soup.findAll("img", {'class':MEDIA_RSS_INCLUDE})
+        images = soup.findAll("img"})
         images_to_include = [dict(url=img['src'], height=img.get('height', u'75'), 
             width=img.get('width', u'75'), title=img.get('alt', '') ) for img in images]
         return images_to_include
